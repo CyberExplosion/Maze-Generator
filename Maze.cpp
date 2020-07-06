@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstdlib>
 #include <queue>
+#include <stack>
 //#include <array>
 #include <future>
 using namespace std;
@@ -33,7 +34,7 @@ private:
 	Pos findAdjNodeToUnlock(Pos curLocal);
 	void generatingMaze();
 public:
-	Maze(int width, int length, Pos start, Pos end, char obst = 'X', char path = 'O') : obstacleChar(obst), pathChar(path), startNode(start), endNode(end) {
+	Maze(int width, int length, Pos start, Pos end, char obst = 'X', char path = '.') : obstacleChar(obst), pathChar(path), startNode(start), endNode(end) {
 		m_maze = vector<vector<char>>(width, vector<char>(length, obst));
 		generatingMaze();
 	}
@@ -44,8 +45,8 @@ public:
 
 int main() {
 	Pos first(0, 0);
-	Pos end(3, 3);
-	Maze maze(4, 4, first, end);
+	Pos end(9, 9);
+	Maze maze(10, 10, first, end);
 	vector<vector<char>> result;
 	maze.getMaze(result);
 	for (auto row : result) {
@@ -79,15 +80,14 @@ bool Maze::validPos(Pos local) {
 //Function return true if the node can be unlocked, return false if already unlocked or out of bound
 bool Maze::unlockNode(Pos local) {
 	if (validPos(local)) {
-		if (m_maze.at(local.y).at(local.x) == pathChar)
-			return false;
-		else {
+		if (m_maze.at(local.y).at(local.x) == obstacleChar) {
 			m_maze.at(local.y).at(local.x) = pathChar;
-			return false;
+			return true;
 		}
 	}
 	return false;
 }
+
 //The function find the next "Locked" node and return the location of that node, if not found the function throw a logical error
 Pos Maze::findAdjNodeToUnlock(Pos curLocal) {
 	Pos targetLocal = curLocal;
@@ -95,8 +95,10 @@ Pos Maze::findAdjNodeToUnlock(Pos curLocal) {
 	if (validPos(curLocal)) {
 		//Direction dirNodeToUnlock = static_cast<Direction>(rand() / (RAND_MAX / (3 - 0 + 1) + 1));
 		vector<Direction> DirVec{ Direction::left, Direction::right, Direction::up, Direction::down };
-		srand(time(0));
+
+		//srand(time(0));
 		auto r = rand() / (RAND_MAX / (DirVec.size() - 0) + 1);	//Get a random index from 0 to last index in DirVec
+		//auto r = rand() % DirVec.size();
 
 		switch (DirVec.at(r)) {
 		case Direction::left:
@@ -140,6 +142,7 @@ Pos Maze::findAdjNodeToUnlock(Pos curLocal) {
 					return targetLocal;
 			}
 		}
+		else return targetLocal;
 	}
 	throw logic_error("Reach end of 4 direction without finding any possible Node to unlock");
 	//return targetLocal;
@@ -158,24 +161,51 @@ void Maze::generatingMaze() {
 		//M + rand() / (RAND_MAX / (N - M + 1) + 1)
 		srand(time(0));
 		queue<Pos> Nodes;
+		stack<Pos> prevNodes;
 		Nodes.push(startNode);
 
 		while (!Nodes.empty()) {
-			int numUnlock = 1 + rand() / (RAND_MAX / (3 - 1 + 1) + 1);	//3 is the maximum number of adjacent nodes that you can unlock
+			//int numUnlock = 1 + rand() / (RAND_MAX / (3 - 1 + 1) + 1);	//3 is the maximum number of adjacent nodes that you can unlock
+			//int numUnlock = 1 + rand() % 2;
+			int numUnlock = 1;
+
 			Pos curNode = Nodes.front();
 			Nodes.pop();
+
+			//FIXME: The maze not correctly generated
+			for (auto row : m_maze) {
+				for (auto col : row) {
+					cout << col << " ";
+				}
+				cout << endl;
+			}
+			cout << "/////////////////////////////\n";
+			////////////////////////////////////////////////////////
+
+			//FIXME: There's a possibility of the maze path stuck at the left wall of the box because the first Direction fill in findAdjNodeToUnlock is left first
 			if (!adjToEndNode(curNode)) {
 				for (int i = 0; i < numUnlock; ++i) {
 					try {
 						Pos adj = findAdjNodeToUnlock(curNode);
 						Nodes.push(adj);
+
+						//Apply the stack tracking method with nodes that still has adjacent sides
+						prevNodes.push(Nodes.back());
 					}
 					catch (const logic_error& e) {
-						continue;	//If no node is found, then just skip over 1 loop
+						continue;	//If no locked node is found, then just skip over 1 loop
 					}
 				}
+
+
 			}
 			else return;	//Finish creating a path toward the end Nodes
+
+			//Restart the loop with another nodes since we haven't reached the End Node
+			if (Nodes.empty()) {
+				Nodes.push(prevNodes.top());
+				prevNodes.pop();
+			}
 		}
 	}
 }
