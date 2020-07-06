@@ -3,7 +3,8 @@
 #include <vector>
 #include <cstdlib>
 #include <queue>
-#include <array>
+//#include <array>
+#include <future>
 using namespace std;
 
 //0 - 0 pos will be the top left corner, the y pos will be Cartesian Coordinate but downward
@@ -34,16 +35,25 @@ private:
 public:
 	Maze(int width, int length, Pos start, Pos end, char obst = 'X', char path = 'O') : obstacleChar(obst), pathChar(path), startNode(start), endNode(end) {
 		m_maze = vector<vector<char>>(width, vector<char>(length, obst));
+		generatingMaze();
 	}
-	void getMaze(vector<vector<char>>&& source) {
-		source = std::move(m_maze);
+	void getMaze(vector<vector<char>>& source) {
+		source = m_maze;
 	}
 };
 
 int main() {
 	Pos first(0, 0);
-	Pos end(2, 2);
-	Maze maze(3, 3, first, end);
+	Pos end(3, 3);
+	Maze maze(4, 4, first, end);
+	vector<vector<char>> result;
+	maze.getMaze(result);
+	for (auto row : result) {
+		for (auto col : row) {
+			cout << col << " ";
+		}
+		cout << "\n";
+	}
 	cout << "Paused";
 }
 
@@ -84,7 +94,6 @@ Pos Maze::findAdjNodeToUnlock(Pos curLocal) {
 
 	if (validPos(curLocal)) {
 		//Direction dirNodeToUnlock = static_cast<Direction>(rand() / (RAND_MAX / (3 - 0 + 1) + 1));
-		bool foundNodeToUnlock = false;
 		vector<Direction> DirVec{ Direction::left, Direction::right, Direction::up, Direction::down };
 		srand(time(0));
 		auto r = rand() / (RAND_MAX / (DirVec.size() - 0) + 1);	//Get a random index from 0 to last index in DirVec
@@ -141,6 +150,10 @@ void Maze::generatingMaze() {
 	if (validPos(startNode) && validPos(endNode)) {
 		if (adjToEndNode(startNode))
 			return;
+		//Fill the start and end Node with path
+		m_maze.at(startNode.y).at(startNode.y) = pathChar;
+		m_maze.at(endNode.y).at(endNode.y) = pathChar;
+
 		//Randomly determine how many Path should be created
 		//M + rand() / (RAND_MAX / (N - M + 1) + 1)
 		srand(time(0));
@@ -162,7 +175,7 @@ void Maze::generatingMaze() {
 					}
 				}
 			}
-			else return;
+			else return;	//Finish creating a path toward the end Nodes
 		}
 	}
 }
