@@ -193,6 +193,8 @@ void Maze::generatingMaze() {
 						prevNodes.push(Nodes.back());
 					}
 					catch (const logic_error& e) {
+						Nodes.push(prevNodes.top());
+						prevNodes.pop();
 						continue;	//If no locked node is found, then just skip over 1 loop
 					}
 				}
@@ -201,11 +203,11 @@ void Maze::generatingMaze() {
 			}
 			else return;	//Finish creating a path toward the end Nodes
 
-			//Restart the loop with another nodes since we haven't reached the End Node
-			if (Nodes.empty()) {
-				Nodes.push(prevNodes.top());
-				prevNodes.pop();
-			}
+		//	//Restart the loop with another nodes since we haven't reached the End Node
+		//	if (Nodes.empty()) {
+		//		Nodes.push(prevNodes.top());
+		//		prevNodes.pop();
+		//	}
 		}
 	}
 }
