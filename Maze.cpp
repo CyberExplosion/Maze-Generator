@@ -5,7 +5,7 @@
 #include <queue>
 #include <stack>
 //#include <array>
-#include <future>
+//#include <future>
 using namespace std;
 
 //0 - 0 pos will be the top left corner, the y pos will be Cartesian Coordinate but downward
@@ -51,8 +51,8 @@ public:
 
 int main() {
 	Pos first(0, 0);
-	Pos end(9, 9);
-	Maze maze(10, 10, first, end);
+	Pos end(14, 14);
+	Maze maze(15, 15, first, end);
 	vector<vector<char>> result;
 	maze.getMaze(result);
 	for (auto row : result) {
@@ -94,7 +94,7 @@ bool Maze::unlockNode(const Pos& local) {
 	return false;
 }
 
-//The function find the next "Locked" node and return the location of that node, if not found the function throw a logical error
+//The function find the next "Locked" node, unlock it and return the location of that node, if not found the function throw a logical error
 Pos Maze::findAdjNodeToUnlock(const Pos& curLocal) {
 	Pos targetLocal = curLocal;
 
@@ -154,6 +154,10 @@ Pos Maze::findAdjNodeToUnlock(const Pos& curLocal) {
 	//return targetLocal;
 }
 
+/*******************
+The function create the maze by using random direction, and use a technique like 
+Breadth first search to put create path from the start Node to the end Node
+********************/
 void Maze::generatingMaze() {
 	//Check if the starting and end position is valid
 	if (validPos(startNode) && validPos(endNode)) {
@@ -173,12 +177,12 @@ void Maze::generatingMaze() {
 		while (!Nodes.empty()) {
 			//int numUnlock = 1 + rand() / (RAND_MAX / (3 - 1 + 1) + 1);	//3 is the maximum number of adjacent nodes that you can unlock
 			//int numUnlock = 1 + rand() % 2;
-			int numUnlock = 1;
+			int numUnlock = 1;	// FIXME: Only unlock 1 adjacent nodes at a time, any higher cause problem for the whole maze to be unlocked
 
 			Pos curNode = Nodes.front();
 			Nodes.pop();
 
-			//FIXME: The maze not correctly generated
+			//FIXME: The maze not correctly generated - DONE
 			for (auto row : m_maze) {
 				for (auto col : row) {
 					cout << col << " ";
@@ -199,13 +203,13 @@ void Maze::generatingMaze() {
 						prevNodes.push(Nodes.back());
 					}
 					catch (const no_sides_avaialbe&) {	//No sides is available -> Use nodes that has available sides store in the stack
-						Nodes.push(prevNodes.top());
-						prevNodes.pop();
+						if (!prevNodes.empty()) {
+							Nodes.push(prevNodes.top());
+							prevNodes.pop();
+						}
 						continue;	//If no locked node is found, then just skip over 1 loop
 					}
 				}
-
-
 			}
 			else return;	//Finish creating a path toward the end Nodes
 		}
