@@ -28,12 +28,13 @@ private:
 	Pos endNode;
 	vector<vector<char>> m_maze;
 
-	bool adjToEndNode(Pos local);
-	bool validPos(Pos local);
-	bool unlockNode(Pos local);
-	Pos findAdjNodeToUnlock(Pos curLocal);
+	bool adjToEndNode(const Pos& local);
+	bool validPos(const Pos& local);
+	bool unlockNode(const Pos& local);
+	Pos findAdjNodeToUnlock(const Pos& curLocal);
 	void generatingMaze();
 public:
+
 	Maze(int width, int length, Pos start, Pos end, char obst = 'X', char path = '.') : obstacleChar(obst), pathChar(path), startNode(start), endNode(end) {
 		m_maze = vector<vector<char>>(width, vector<char>(length, obst));
 		generatingMaze();
@@ -41,6 +42,11 @@ public:
 	void getMaze(vector<vector<char>>& source) {
 		source = m_maze;
 	}
+
+	//Error class
+	struct no_sides_avaialbe : public logic_error {
+		no_sides_avaialbe(const char* msg) : logic_error(msg) {};
+	};
 };
 
 int main() {
@@ -58,7 +64,7 @@ int main() {
 	cout << "Paused";
 }
 
-bool Maze::adjToEndNode(Pos local) {
+bool Maze::adjToEndNode(const Pos& local) {
 	if (validPos(local)) {
 		if (local.x == endNode.x)
 			if (local.y == endNode.y - 1 || local.y == endNode.y + 1)
@@ -70,7 +76,7 @@ bool Maze::adjToEndNode(Pos local) {
 	return false;
 }
 
-bool Maze::validPos(Pos local) {
+bool Maze::validPos(const Pos& local) {
 	if ((local.x >= m_maze.at(0).size() || local.y >= m_maze.size()) || (local.x < 0 || local.y < 0)) {
 		return false;
 	}
@@ -78,7 +84,7 @@ bool Maze::validPos(Pos local) {
 }
 
 //Function return true if the node can be unlocked, return false if already unlocked or out of bound
-bool Maze::unlockNode(Pos local) {
+bool Maze::unlockNode(const Pos& local) {
 	if (validPos(local)) {
 		if (m_maze.at(local.y).at(local.x) == obstacleChar) {
 			m_maze.at(local.y).at(local.x) = pathChar;
@@ -89,7 +95,7 @@ bool Maze::unlockNode(Pos local) {
 }
 
 //The function find the next "Locked" node and return the location of that node, if not found the function throw a logical error
-Pos Maze::findAdjNodeToUnlock(Pos curLocal) {
+Pos Maze::findAdjNodeToUnlock(const Pos& curLocal) {
 	Pos targetLocal = curLocal;
 
 	if (validPos(curLocal)) {
@@ -144,7 +150,7 @@ Pos Maze::findAdjNodeToUnlock(Pos curLocal) {
 		}
 		else return targetLocal;
 	}
-	throw logic_error("Reach end of 4 direction without finding any possible Node to unlock");
+	throw no_sides_avaialbe("Reach end of 4 direction without finding any possible Node to unlock");
 	//return targetLocal;
 }
 
@@ -182,7 +188,7 @@ void Maze::generatingMaze() {
 			cout << "/////////////////////////////\n";
 			////////////////////////////////////////////////////////
 
-			//FIXME: There's a possibility of the maze path stuck at the left wall of the box because the first Direction fill in findAdjNodeToUnlock is left first
+			//FIXME: There's a possibility of the maze path stuck at the left wall of the box because the first Direction fill in findAdjNodeToUnlock is left first - DONE
 			if (!adjToEndNode(curNode)) {
 				for (int i = 0; i < numUnlock; ++i) {
 					try {
@@ -192,7 +198,7 @@ void Maze::generatingMaze() {
 						//Apply the stack tracking method with nodes that still has adjacent sides
 						prevNodes.push(Nodes.back());
 					}
-					catch (const logic_error& e) {
+					catch (const no_sides_avaialbe&) {	//No sides is available -> Use nodes that has available sides store in the stack
 						Nodes.push(prevNodes.top());
 						prevNodes.pop();
 						continue;	//If no locked node is found, then just skip over 1 loop
@@ -202,12 +208,6 @@ void Maze::generatingMaze() {
 
 			}
 			else return;	//Finish creating a path toward the end Nodes
-
-		//	//Restart the loop with another nodes since we haven't reached the End Node
-		//	if (Nodes.empty()) {
-		//		Nodes.push(prevNodes.top());
-		//		prevNodes.pop();
-		//	}
 		}
 	}
 }
