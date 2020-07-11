@@ -6,14 +6,16 @@
 #include <stack>
 //#include <array>
 //#include <future>
+
+#include "DjikstraPath.h"
 using namespace std;
 
 //0 - 0 pos will be the top left corner, the y pos will be Cartesian Coordinate but downward
-struct Pos {
-	int x;
-	int y;
-	Pos(int localX, int localY) : x(localX), y(localY) {};
-};
+//struct Pos {
+//	int x;
+//	int y;
+//	Pos(int localX, int localY) : x(localX), y(localY) {};
+//};
 
 enum class Direction { left, right, up, down, invalid };
 
@@ -50,18 +52,43 @@ public:
 };
 
 int main() {
-	Pos first(0, 0);
-	Pos end(14, 14);
-	Maze maze(15, 15, first, end);
-	vector<vector<char>> result;
-	maze.getMaze(result);
-	for (auto row : result) {
-		for (auto col : row) {
-			cout << col << " ";
-		}
-		cout << "\n";
+	//Pos first(0, 0);
+	//Pos end(14, 14);
+	//Maze maze(15, 15, first, end);
+	//vector<vector<char>> result;
+	//maze.getMaze(result);
+	//for (auto row : result) {
+	//	for (auto col : row) {
+	//		cout << col << " ";
+	//	}
+	//	cout << "\n";
+	//}
+	//cout << "Paused";
+
+
+	Node neoNode(Pos(0 , 0));
+	ListGraph graph(neoNode);
+	Node another(Pos(0, 1));
+	graph.addNode(another);
+	Node another2(Pos(1, 1));
+	graph.addNode(another2);
+
+	try {
+		Node another3(Pos(2, 2));
+		graph.addNode(another3);
 	}
-	cout << "Paused";
+	catch (const exception& e) {
+		cerr << e.what();
+	}
+
+	Node another4(Pos(1, 2));
+	graph.addNode(another4);
+	Node another5(Pos(1, 3));
+	graph.addNode(another5);
+
+	//Node another6(Pos(-1, -1));
+
+	cout << "End";
 }
 
 bool Maze::adjToEndNode(const Pos& local) {

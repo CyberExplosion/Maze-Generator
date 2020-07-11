@@ -12,20 +12,15 @@ void ListGraph::connectVertices(const Node& node1, const Node& node2) {
 		[&node2](list<Node>& host) {
 			return (host.front().position.x == node2.position.x) && (host.front().position.y == node2.position.y);	//Find if the node2 already exist in graph
 		});
-	if (result != end(graph))
+	if (result == end(graph))
 		throw NodeNotExist("Node 1 does not exist");
-	if (result2 != end(graph))
+	if (result2 == end(graph))
 		throw NodeNotExist("Node 2 does not exist");
+
 	//Edge 1 -> 2
-
-	if (result == end(graph)) {
-		result->push_back(node2);
-	}
-
-	//Edge 2->1
-	if (result2 == end(graph)) {
-		result2->push_back(node1);
-	}
+	result->push_back(node2);
+	//Edge 2 -> 1
+	result2->push_back(node1);
 }
 
 //The function will put weight onto the nodes surround the input Node
@@ -62,16 +57,22 @@ bool ListGraph::connect(const Node& node1, const Node& node2) {
 			return true;
 		}
 		catch (const ListGraph::NodeNotExist& e) {
-			e.what();
+			std::cerr << e.what();
 			throw;
 		}
 	}
 	return false;
 }
 
+//bool ListGraph::isSameNode(const Node& node1, const Node& node2) noexcept {
+//	if (node1.position == node2.position)
+//		return true;
+//	return false;
+//}
+
 //Considering the first node already been made with weight 0 when class was first init
-void ListGraph::addNode(const Node& preMadeNode) noexcept {
-	if (graph.size() == 1) {
+void ListGraph::addNode(Node& preMadeNode)  {
+	if (graph.empty()) {
 		Pos neoPos(preMadeNode.position.x, preMadeNode.position.y);
 		Node neoNode(neoPos);
 		list<Node> neoHost;
@@ -81,5 +82,20 @@ void ListGraph::addNode(const Node& preMadeNode) noexcept {
 	}
 	else {
 		//FIXME: Add functionality to deal with when the graph already has more than 1 node
+		auto host = graph.back();	//The new node to add is either adjacent to the preMadeNode or not
+		if (preMadeNode == host.front())
+			throw NodeAlreadyExist("New node already exist in the graph");
+
+		if (isAdjacent(host.front().position, preMadeNode.position)) {
+			if(preMadeNode.weightToHere == 0)	//Only update weight if the node was freshly made
+				preMadeNode.weightToHere = host.front().weightToHere + 1;	//Add weight to the adjacent node
+
+			list<Node>neoHost;
+			neoHost.push_front(preMadeNode);
+			graph.push_back(std::move(neoHost));
+
+			connect(host.front(), graph.back().front());	//Connect the edges between the last node and the new one
+		}
+		else throw logic_error("Input node is not adjacent to latest node in the graph");
 	}
 }
