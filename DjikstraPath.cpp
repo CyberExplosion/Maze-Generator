@@ -23,20 +23,20 @@ void ListGraph::connectVertices(const Node& node1, const Node& node2) {
 	result2->push_back(node1);
 }
 
-//The function will put weight onto the nodes surround the input Node
-void ListGraph::putWeight(const Node& inNode) {
-	auto host = find_if(begin(graph), end(graph),
-		[&inNode](list<Node>& host) {
-			return (host.front().position.x == inNode.position.x) && (host.front().position.y == inNode.position.y);	//Find the node that want to put weight to its' neighbor
-		});
-
-	if (host != end(graph)) {	//If the node is in a graph, it will always have at least an edge -> always have at least one neighbor
-		for (auto neighbor = ++begin(*host); neighbor != end(*host); ++neighbor) {	// ++ will make the iterator move to the 2nd node and not the first node which is host
-			neighbor->weightToHere = host->front().weightToHere + 1;
-		}
-	}
-	else throw OnlyOneNodeExist("There's no neighbor node to put weight on");
-}
+////The function will put weight onto the nodes surround the input Node
+//void ListGraph::putWeight(const Node& inNode) {
+//	auto host = find_if(begin(graph), end(graph),
+//		[&inNode](list<Node>& host) {
+//			return (host.front().position.x == inNode.position.x) && (host.front().position.y == inNode.position.y);	//Find the node that want to put weight to its' neighbor
+//		});
+//
+//	if (host != end(graph)) {	//If the node is in a graph, it will always have at least an edge -> always have at least one neighbor
+//		for (auto neighbor = ++begin(*host); neighbor != end(*host); ++neighbor) {	// ++ will make the iterator move to the 2nd node and not the first node which is host
+//			neighbor->weightToHere = host->front().weightToHere + 1;
+//		}
+//	}
+//	else throw OnlyOneNodeExist("There's no neighbor node to put weight on");
+//}
 
 //Function check if the two position is adjacent or not
 bool ListGraph::isAdjacent(const Pos& node1, const Pos& node2) noexcept {

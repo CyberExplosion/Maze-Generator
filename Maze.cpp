@@ -68,20 +68,20 @@ int main() {
 
 	Node neoNode(Pos(0 , 0));
 	ListGraph graph(neoNode);
-	Node another(Pos(0, 1));
+	Node another(Pos(1, 0));
 	graph.addNode(another);
-	Node another2(Pos(1, 1));
+	Node another2(Pos(0, 1));
 	graph.addNode(another2);
 
-	try {
-		Node another3(Pos(2, 2));
-		graph.addNode(another3);
-	}
-	catch (const exception& e) {
-		cerr << e.what();
-	}
+	//try {
+	//	Node another3(Pos(2, 2));
+	//	graph.addNode(another3);
+	//}
+	//catch (const exception& e) {
+	//	cerr << e.what();
+	//}
 
-	Node another4(Pos(1, 2));
+	Node another4(Pos(1, 1));
 	graph.addNode(another4);
 	Node another5(Pos(1, 3));
 	graph.addNode(another5);
