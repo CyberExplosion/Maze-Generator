@@ -4,8 +4,11 @@
 #include <vector>
 #include <list>
 #include <queue>
+#include <functional>
+#include <unordered_map>
 
 const int IFN = 9999;
+
 
 template<typename T>
 struct inequal {
@@ -39,6 +42,23 @@ struct Node {
 	}
 };
 
+//Using the hash combine method provides by cppreference
+struct listHash {
+	std::size_t operator()(const Node& host) const noexcept {
+		std::size_t h1 = std::hash<int>{}(host.position.x);
+		std::size_t h2 = std::hash<int>{}(host.position.y);
+		std::size_t h3 = std::hash<int>{}(host.weightToHere);
+		
+		// Compute individual hash values for first,
+	  // second and third and combine them using XOR
+	  // and bit shifting:
+
+		//return ((hash<string>()(k.first) ^ (hash<string>()(k.second) << 1)) >> 1) ^ (hash<int>()(k.third) << 1);
+
+		return ((h1 ^ (h2 << 1)) >> 1) ^ (h3 << 1);
+	}
+};
+
 class ListGraph {
 public:
 	//Error classes
@@ -52,7 +72,9 @@ public:
 		NodeAlreadyExist(const char* msg) : logic_error(msg) {};
 	};
 private:
-	std::vector<std::list<Node>> graph;
+	//std::vector<std::list<Node>> graph;	-- Using set provides faster access
+	std::unordered_map<Node, std::list<Node>, listHash> graph;
+
 	//Private func
 	void connectVertices(const Node& node1, const Node& node2);
 	//void putWeight(const Node& inNode);	//Not used
@@ -60,6 +82,7 @@ private:
 	//FIXME: create method to find if there's exist in the graph nodes that adjacent to one particular Input node
 	bool isAdjacent(const Pos& node1, const Pos& node2) noexcept;
 	bool connect(const Node& node1, const Node& node2);
+	bool existAround(const Node& inNode, Node& outNode) noexcept;
 	//bool isSameNode(const Node& node1, const Node& node2) noexcept;
 public:
 	ListGraph(Node& preNode) {
@@ -76,6 +99,9 @@ public:
 };
 
 class DjikstraPath {
-	
+private:
+	ListGraph graph;
+public:
+	DjikstraPath(Node& beginNode) : graph(beginNode) {};
 };
 
