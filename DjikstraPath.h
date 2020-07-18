@@ -9,6 +9,7 @@
 
 const int IFN = 9999;
 
+enum class Direction { left, right, up, down, invalid };
 
 template<typename T>
 struct inequal {
@@ -71,6 +72,9 @@ public:
 	struct NodeAlreadyExist : public std::logic_error {
 		NodeAlreadyExist(const char* msg) : logic_error(msg) {};
 	};
+	struct NodeNotAdjToAny : public std::runtime_error {
+		NodeNotAdjToAny(const char* msg) : runtime_error(msg) {};
+	};
 private:
 	//std::vector<std::list<Node>> graph;	-- Using set provides faster access
 	std::unordered_map<Node, std::list<Node>, listHash> graph;
@@ -82,8 +86,12 @@ private:
 	//FIXME: create method to find if there's exist in the graph nodes that adjacent to one particular Input node
 	bool isAdjacent(const Pos& node1, const Pos& node2) noexcept;
 	bool connect(const Node& node1, const Node& node2);
-	bool existAround(const Node& inNode, Node& outNode) noexcept;
+	//void checkAdjByDir(const Direction& dir);
+	//bool existAround(const Node& inNode, Node& outNode) noexcept;
 	//bool isSameNode(const Node& node1, const Node& node2) noexcept;
+	void addAloneNode(const Node& awayNode) noexcept;
+	void addNodeToAlreadyExist(const Node& inNode);
+	//void weightUpdate(const Node& startNode);
 public:
 	ListGraph(Node& preNode) {
 		//preNode.weightToHere = 0;

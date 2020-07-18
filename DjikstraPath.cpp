@@ -61,51 +61,112 @@ bool ListGraph::connect(const Node& node1, const Node& node2) {
 	return false;
 }
 
-//Function will check the 4 adjacent node surround this node and to see if any of them is in the graph
-bool ListGraph::existAround(const Node& node, Node& outNode) noexcept {
-	if (graph.count(node) == 0) {	//First check if this node is not in our graph
+void ListGraph::addAloneNode(const Node& awayNode) noexcept {
+	list<Node> neoHost;
+	neoHost.push_back(awayNode);
+	graph[awayNode] = std::move(neoHost);	//Create new vertix for inNode
+}
+
+//Function will check for each adjacent direction of the inputNode (left, right, up, down)
+//Add inNode to the graph if it's not already exists. Also connect the inNode edges with 
+//each adjacent nodes if found
+void ListGraph::addNodeToAlreadyExist(const Node& inNode) {
+	if (graph.count(inNode) == 0) {
+		bool addSuccess = false;
 		//Left
 		try {
-			Pos left(node.position.x - 1, node.position.y);
-
+			Pos left(inNode.position.x - 1, inNode.position.y);
 			Node temp1(left);
-			auto resultL = graph.find(temp1);
-			if (resultL != end(graph)) {
-				outNode = resultL->first;
-				return true;
+			//Check for if node exist inside graph
+			if (graph.count(temp1) > 0) {
+				addAloneNode(inNode);
+				addSuccess = connect(temp1, inNode);	//Connect edges of these 2 vertices
 			}
 		}
-		catch (const Pos::NegativePos& e) {}
+		catch (const Pos::NegativePos& e) { cerr << e.what(); }
 		//Right
-		Pos right(node.position.x + 1, node.position.y);
+		Pos right(inNode.position.x + 1, inNode.position.y);
 		Node temp2(right);
-		auto resultR = graph.find(temp2);
-		if (resultR != end(graph)) {
-			outNode = resultR->first;
-			return true;
+		//Check for if node exist inside graph
+		if (graph.count(temp2) > 0) {
+			if (graph.count(inNode) == 0) {	//If node is not already add on by the previous adjacent check
+				addAloneNode(inNode);
+			}
+			addSuccess = connect(temp2, inNode);	//Connect edges of these 2 vertices
 		}
 		//Up
 		try {
-			Pos up(node.position.x, node.position.y - 1);
+			Pos up(inNode.position.x, inNode.position.y - 1);
 			Node temp3(up);
-			auto resultU = graph.find(temp3);
-			if (resultU != end(graph)) {
-				outNode = resultU->first;
-				return true;
+			//Check for if node exist inside graph
+			if (graph.count(temp3) > 0) {
+				if (graph.count(inNode) == 0)
+					addAloneNode(inNode);
+				addSuccess = connect(temp3, inNode);	//Connect edges of these 2 vertices
 			}
 		}
-		catch (const Pos::NegativePos& e) {}
+		catch (const Pos::NegativePos& e) { cerr << e.what(); }
 		//Down
-		Pos down(node.position.x, node.position.y + 1);
+		Pos down(inNode.position.x, inNode.position.y + 1);
 		Node temp4(down);
-		auto resultD = graph.find(temp4);
-		if (resultD != end(graph)) {
-			outNode = resultD->first;
-			return true;
+		//Check for if node exist inside graph
+		if (graph.count(temp4) > 0) {
+			if (graph.count(inNode) == 0)	//These checks could be made a lot better by doing it only one at the top. FIXME: Optimization opportunity
+				addAloneNode(inNode);
+			addSuccess = connect(temp4, inNode);	//Connect edges of these 2 vertices
 		}
+		if (!addSuccess)
+			throw NodeNotAdjToAny("Node trying to add is not adjacent to any in graph");
 	}
-	return false;
+	else throw NodeAlreadyExist("Node trying to check before adding into graph already exist in graph");
 }
+
+
+////Function will check the 4 adjacent node surround this node and to see if any of them is in the graph
+//bool ListGraph::existAround(const Node& node, Node& outNode) noexcept {
+//	if (graph.count(node) == 0) {	//First check if this node is not in our graph
+//		//Left
+//		try {
+//			Pos left(node.position.x - 1, node.position.y);
+//
+//			Node temp1(left);
+//			auto resultL = graph.find(temp1);
+//			if (resultL != end(graph)) {
+//				outNode = resultL->first;
+//				return true;
+//			}
+//		}
+//		catch (const Pos::NegativePos& e) {}
+//		//Right
+//		Pos right(node.position.x + 1, node.position.y);
+//		Node temp2(right);
+//		auto resultR = graph.find(temp2);
+//		if (resultR != end(graph)) {
+//			outNode = resultR->first;
+//			return true;
+//		}
+//		//Up
+//		try {
+//			Pos up(node.position.x, node.position.y - 1);
+//			Node temp3(up);
+//			auto resultU = graph.find(temp3);
+//			if (resultU != end(graph)) {
+//				outNode = resultU->first;
+//				return true;
+//			}
+//		}
+//		catch (const Pos::NegativePos& e) {}
+//		//Down
+//		Pos down(node.position.x, node.position.y + 1);
+//		Node temp4(down);
+//		auto resultD = graph.find(temp4);
+//		if (resultD != end(graph)) {
+//			outNode = resultD->first;
+//			return true;
+//		}
+//	}
+//	return false;
+//}
 
 //bool ListGraph::isSameNode(const Node& node1, const Node& node2) noexcept {
 //	if (node1.position == node2.position)
@@ -129,21 +190,44 @@ void ListGraph::addNode(Node& preMadeNode) {
 		if (graph.count(preMadeNode) > 0)
 			throw NodeAlreadyExist("New node already exist in the graph");
 
-		Pos temp(0, 0);
-		Node tmp(temp);
+		addNodeToAlreadyExist(preMadeNode);
+		//weightUpdate(preMadeNode);
+		//Pos temp(0, 0);
+		//Node tmp(temp);
 
 		//FIXME: Currently function existAround doesn't work like intended. It doesn't add in the 4th adjacent node in the main(). Also it only add 1 adjacent node and not all adjacent node to its neighbor list
-		if (existAround(preMadeNode, tmp)) {
-			if (preMadeNode.weightToHere == 0)	//Only update weight if the node was freshly made
-				preMadeNode.weightToHere = tmp.weightToHere + 1;	//Add weight to the adjacent node
+		//if (existAround(preMadeNode, tmp)) {
+			//if (preMadeNode.weightToHere == 0)	//Only update weight if the node was freshly made
+				//preMadeNode.weightToHere = tmp.weightToHere + 1;	//Add weight to the adjacent node
 
-			//add the new node
-			list<Node> neoHost;
-			neoHost.push_back(preMadeNode);
-			graph[preMadeNode] = std::move(neoHost);
+			////add the new node
+			//list<Node> neoHost;
+			//neoHost.push_back(preMadeNode);
+			//graph[preMadeNode] = std::move(neoHost);
 
-			connect(preMadeNode, tmp);	//Connect the edges between the last node and the new one
-		}
-		else throw logic_error("Input node is not adjacent to latest node in the graph");
+			//connect(preMadeNode, tmp);	//Connect the edges between the last node and the new one
+		//}
+		//else throw logic_error("Input node is not adjacent to latest node in the graph");
 	}
 }
+
+////This function will add weight into the newly add nodes base on the weight of existing nodes
+//void ListGraph::weightUpdate(const Node& inNode)  {
+//	/*
+//	Function will find the lowest weight in the list, then base on that make the host only 1 more weight away
+//	This deals with situation when a new node is created adjacent between a low weight node and a high weight node
+//	*/
+//	auto host = graph.find(inNode);
+//	if (host != end(graph)) {
+//		int lowestWeight = host->second.front().weightToHere;
+//		for (const auto& neighbors : host->second) {
+//			if (neighbors.weightToHere < lowestWeight)
+//				lowestWeight = neighbors.weightToHere;
+//		}
+//		for (auto& neighbor : host->second) {
+//			neighbor.weightToHere = lowestWeight + 1;
+//		}
+//
+//	}
+//	else throw NodeNotExist("Node to update weight is not existed in graph");
+//}

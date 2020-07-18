@@ -17,7 +17,7 @@ using namespace std;
 //	Pos(int localX, int localY) : x(localX), y(localY) {};
 //};
 
-enum class Direction { left, right, up, down, invalid };
+
 
 //Prototype: The maze won't have a dead end path
 class Maze {
@@ -86,7 +86,8 @@ int main() {
 	Node another5(Pos(1, 3));
 	graph.addNode(another5);
 
-	//Node another6(Pos(-1, -1));
+	Node another6(Pos(-1, -1));
+	graph.addNode(another6);
 
 	cout << "End";
 }
