@@ -114,6 +114,8 @@ public:
 	}
 	//Check if the node exist, if not then add it into the graph.
 	void addNode(Node& preMadeNode);
+	bool isConnected(const Node& firstNode, const Node& secondNode);
+	void nodeAdjcTo(const Node& source, std::vector<Node>& adjcNode_vec);
 };
 
 class DjikstraPath {
@@ -121,5 +123,6 @@ private:
 	ListGraph graph;
 public:
 	DjikstraPath(Node& beginNode) : graph(beginNode) {};
+
 };
 

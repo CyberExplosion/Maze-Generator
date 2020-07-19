@@ -217,6 +217,33 @@ void ListGraph::addNode(Node& preMadeNode) {
 	}
 }
 
+//This function return true if 2 nodes are connected in the graph, return false otherwise. Could throw
+bool ListGraph::isConnected(const Node& firstNode, const Node& secondNode) {
+	if (graph.count(firstNode) == 0)
+		throw NodeNotExist("First param Node does not exist");
+	if (graph.count(secondNode) == 0)
+		throw NodeNotExist("Second param Node does not exist");
+	
+	auto host = graph[firstNode];
+	for (auto neighbor : host)
+		if (neighbor == secondNode)
+			return true;
+
+	return false;
+}
+
+//function returns a vector of Node that adjacent to the source, could throw if the source does not exist
+void ListGraph::nodeAdjcTo(const Node& source, std::vector<Node>& adjcNode_vec) {
+	if (graph.count(source) == 0)
+		throw NodeNotExist("Source node does not exist in graph");
+	vector<Node>temp;
+	list<Node> host = graph[source];
+	for (auto neighbor : host) {
+		temp.push_back(neighbor);
+	}
+	adjcNode_vec = std::move(temp);
+}
+
 ////This function will add weight into the newly add nodes base on the weight of existing nodes
 //void ListGraph::weightUpdate(const Node& inNode)  {
 //	/*
