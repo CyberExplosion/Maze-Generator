@@ -102,6 +102,16 @@ public:
 			std::cerr << e.what() << "\n";
 		}
 	}
+	ListGraph(Pos& prePos) {	//Because of the way the parameter is set up, i had to ended up making another constructor. This could be make better using init list - OPTIMIZATION
+		Node preNode(prePos);
+
+		try {
+			addNode(preNode);
+		}
+		catch (const std::exception& e) {
+			std::cerr << e.what() << "\n";
+		}
+	}
 	//Check if the node exist, if not then add it into the graph.
 	void addNode(Node& preMadeNode);
 };

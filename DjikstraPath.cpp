@@ -1,4 +1,5 @@
 #include "DjikstraPath.h"
+#include <string>
 using namespace std;
 
 //The function will connect 2 nodes with an two way edge
@@ -187,8 +188,13 @@ void ListGraph::addNode(Node& preMadeNode) {
 	}
 	else {
 		//auto host = graph.back();	//The new node to add is either adjacent to the preMadeNode or not
-		if (graph.count(preMadeNode) > 0)
-			throw NodeAlreadyExist("New node already exist in the graph");
+		if (graph.count(preMadeNode) > 0) {
+			string msg = "New node already exist in the graph. Node position x: ";
+			msg = msg + to_string(preMadeNode.position.x);
+			msg += " y: ";
+			msg += to_string(preMadeNode.position.y);
+			throw NodeAlreadyExist(msg.c_str());
+		}
 
 		addNodeToAlreadyExist(preMadeNode);
 		//weightUpdate(preMadeNode);

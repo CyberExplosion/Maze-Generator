@@ -30,6 +30,9 @@ private:
 	Pos endNode;
 	vector<vector<char>> m_maze;
 
+	//Graph
+	ListGraph graph;
+
 	bool adjToEndNode(const Pos& local);
 	bool validPos(const Pos& local);
 	bool unlockNode(const Pos& local);
@@ -37,8 +40,10 @@ private:
 	void generatingMaze();
 public:
 
-	Maze(int width, int length, Pos start, Pos end, char obst = 'X', char path = '.') : obstacleChar(obst), pathChar(path), startNode(start), endNode(end) {
+	Maze(int width, int length, Pos start, Pos end, char obst = 'X', char path = '.') : obstacleChar(obst), pathChar(path), startNode(start), endNode(end), graph(start) {
 		m_maze = vector<vector<char>>(width, vector<char>(length, obst));
+		//Node s(start);
+		//graph = ListGraph(s);
 		generatingMaze();
 	}
 	void getMaze(vector<vector<char>>& source) {
@@ -52,43 +57,17 @@ public:
 };
 
 int main() {
-	//Pos first(0, 0);
-	//Pos end(14, 14);
-	//Maze maze(15, 15, first, end);
-	//vector<vector<char>> result;
-	//maze.getMaze(result);
-	//for (auto row : result) {
-	//	for (auto col : row) {
-	//		cout << col << " ";
-	//	}
-	//	cout << "\n";
-	//}
-	//cout << "Paused";
+	Maze maze(4, 4, Pos(0,0), Pos(3,3));
+	vector<vector<char>> result;
+	maze.getMaze(result);
 
-
-	Node neoNode(Pos(0 , 0));
-	ListGraph graph(neoNode);
-	Node another(Pos(1, 0));
-	graph.addNode(another);
-	Node another2(Pos(0, 1));
-	graph.addNode(another2);
-
-	//try {
-	//	Node another3(Pos(2, 2));
-	//	graph.addNode(another3);
-	//}
-	//catch (const exception& e) {
-	//	cerr << e.what();
-	//}
-
-	Node another4(Pos(1, 1));
-	graph.addNode(another4);
-	Node another5(Pos(1, 3));
-	graph.addNode(another5);
-
-	Node another6(Pos(-1, -1));
-	graph.addNode(another6);
-
+	for (auto row : result) {
+		for (auto col : row) {
+			cout << col << " ";
+		}
+		cout << "\n";
+	}
+	maze.getMaze(result);	//Maze correctly produces and the graph report accurately. Graph doesn't include the destination nodes but every other nodes is in there
 	cout << "End";
 }
 
@@ -210,6 +189,14 @@ void Maze::generatingMaze() {
 			Pos curNode = Nodes.front();
 			Nodes.pop();
 
+			//Add current node to the graph - GRAPH
+			Node neoNode(curNode);
+			try {
+				graph.addNode(neoNode);
+			}
+			catch (const ListGraph::NodeAlreadyExist& e) {
+				cerr << e.what() << "\n";
+			}
 			//FIXME: The maze not correctly generated - DONE
 			for (auto row : m_maze) {
 				for (auto col : row) {
