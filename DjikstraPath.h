@@ -6,6 +6,9 @@
 #include <queue>
 #include <functional>
 #include <unordered_map>
+#include <unordered_set>
+#include <stack>
+#include <set>
 
 const int IFN = 9999;
 
@@ -29,16 +32,16 @@ struct Pos : inequal<Pos> {
 		if (x < 0 || y < 0)
 			throw NegativePos("Negative coordinates are not allowed");
 	};
-	bool operator==(const Pos& rhs) const {
+	bool operator==(const Pos& rhs) const noexcept {
 		return (x == rhs.x && y == rhs.y);
 	}
 };
 
-struct Node {
+struct Node : inequal<Pos>{
 	Pos position;
 	int weightToHere;
 	Node(const Pos& pos, const int w = 0) noexcept : position(pos), weightToHere(w){};
-	bool operator==(const Node& rhs) const {
+	bool operator==(const Node& rhs) const noexcept {
 		return this->position == rhs.position;
 	}
 };
@@ -115,14 +118,67 @@ public:
 	//Check if the node exist, if not then add it into the graph.
 	void addNode(Node& preMadeNode);
 	bool isConnected(const Node& firstNode, const Node& secondNode);
-	void nodeAdjcTo(const Node& source, std::vector<Node>& adjcNode_vec);
+	std::vector<Node> nodesAdjcTo(const Node& source);
+};
+
+struct DjisktraNode : public Node {
+	bool visited;
+	Pos prevPos;
+	DjisktraNode(Pos curPos, int weight, bool visit = false, Pos prev = Pos(0, 0)) : Node(curPos, weight), visited(visit), prevPos(prev) {};
+	DjisktraNode(Node curNode, bool visited = false, Pos prev = Pos(0, 0)) : Node(curNode), visited(visited), prevPos(prev) {};
+	bool operator==(const DjisktraNode& rhs) const noexcept{
+		return (static_cast<Node> (*this) == static_cast<Node>(rhs));	//Use the Node version of equal
+		//return this->position == rhs.position;
+	}
+};
+
+struct DjikstraSetHash {
+	std::size_t operator()(const DjisktraNode& node) const noexcept {
+		////return ((hash<string>()(k.first) ^ (hash<string>()(k.second) << 1)) >> 1) ^ (hash<int>()(k.third) << 1);
+		////		std::size_t h1 = std::hash<int>{}(host.position.x);
+		std::size_t h1 = std::hash<int>{}(node.position.x);
+		std::size_t h2 = std::hash<int>{}(node.position.y);
+		std::size_t h3 = std::hash<int>{}(node.prevPos.x);
+		std::size_t h4 = std::hash<int>{}(node.prevPos.y);
+		std::size_t h5 = std::hash<bool>{}(node.visited);
+		std::size_t h6 = std::hash<int>{}(node.weightToHere);	//These codes above are utterly stupid
+
+		return (((((h1 ^ (h2 << 1) >> 1) ^ (h3 << 1)) >> 1) ^ (h4 << 1) >> 1) ^ (h5 << 1) >> 1 ) ^ (h6 << 1);
+
+		//return static_cast<std::size_t>(sizeof(node.position.x) + sizeof(node.position.y) + sizeof(node.prevPos.x) + sizeof(node.prevPos.y) + sizeof(node.visited) + sizeof(node.weightToHere));
+	}
+};
+
+struct DjikstraMapHash {
+	std::size_t operator()(const Pos& loca) const noexcept {
+		std::size_t h1 = std::hash<int>{}(loca.x);
+		std::size_t h2 = std::hash<int>{}(loca.y);
+		return (h1 ^ (h2 << 1));
+	}
 };
 
 class DjikstraPath {
 private:
 	ListGraph graph;
-public:
-	DjikstraPath(Node& beginNode) : graph(beginNode) {};
+	DjisktraNode startNode, endNode;
+	std::stack<DjisktraNode> pathWay;
 
+	struct lowerCompSet {
+		bool operator()(const DjisktraNode& lhs, const DjisktraNode& rhs) const {
+			return lhs.weightToHere < rhs.weightToHere;
+		}
+	};
+
+	void pruneAndReversePath(std::stack<DjisktraNode>& path) noexcept;
+	void generateWeight(ListGraph& t_graph);
+	void pathFinding();
+public:
+	//No output parameters in here
+	DjikstraPath(const ListGraph& t_graph, const Node& beginNode, const Node& finishNode) : graph(t_graph), startNode(beginNode), endNode(finishNode) {
+		pathFinding();
+	};
+	std::stack<DjisktraNode> getPath() {
+		return pathWay;
+	}
 };
 

@@ -223,7 +223,7 @@ bool ListGraph::isConnected(const Node& firstNode, const Node& secondNode) {
 		throw NodeNotExist("First param Node does not exist");
 	if (graph.count(secondNode) == 0)
 		throw NodeNotExist("Second param Node does not exist");
-	
+
 	auto host = graph[firstNode];
 	for (auto neighbor : host)
 		if (neighbor == secondNode)
@@ -232,17 +232,20 @@ bool ListGraph::isConnected(const Node& firstNode, const Node& secondNode) {
 	return false;
 }
 
+
 //function returns a vector of Node that adjacent to the source, could throw if the source does not exist
-void ListGraph::nodeAdjcTo(const Node& source, std::vector<Node>& adjcNode_vec) {
-	if (graph.count(source) == 0)
+std::vector<Node> ListGraph::nodesAdjcTo(const Node& source) {
+	if (graph.count(source) == 0)	//FIXME: doesn't work if other source change the weight of a particular node.
+									//Want to just check the position of a node and not it's weight also. ONLY WAY is to implement weight on a different containers
 		throw NodeNotExist("Source node does not exist in graph");
 	vector<Node>temp;
 	list<Node> host = graph[source];
 	for (auto neighbor : host) {
 		temp.push_back(neighbor);
 	}
-	adjcNode_vec = std::move(temp);
+	return temp;
 }
+
 
 ////This function will add weight into the newly add nodes base on the weight of existing nodes
 //void ListGraph::weightUpdate(const Node& inNode)  {
@@ -264,3 +267,69 @@ void ListGraph::nodeAdjcTo(const Node& source, std::vector<Node>& adjcNode_vec) 
 //	}
 //	else throw NodeNotExist("Node to update weight is not existed in graph");
 //}
+
+//The function will clean out the node inside the stack that doesn't corresponding to a prevNode
+void DjikstraPath::pruneAndReversePath(stack<DjisktraNode>& tempPath) noexcept {
+	DjisktraNode curNode = tempPath.top();	//Get the end Node
+	tempPath.pop();
+
+	while (!tempPath.empty()) {
+		if (tempPath.top().position == curNode.prevPos) {	//When the prevPos is found in the tempPath
+			curNode = tempPath.top();
+			pathWay.push(curNode);
+		}
+		tempPath.pop();
+	}
+}
+
+//The weight is updated after graph being created.
+void DjikstraPath::generateWeight(ListGraph& t_graph) {
+
+}
+
+void DjikstraPath::pathFinding() {
+	stack<DjisktraNode> tempPath;
+	set<DjisktraNode, lowerCompSet> prioritySet;
+	unordered_set<DjisktraNode, DjikstraSetHash> visited;
+	unordered_map<Pos, int, DjikstraMapHash> weightMap;	//FIXME: Doesn't work like thinking. If stays like the model, the prev Path and the position combine will be the key. THe weight is the value
+	//unordered_set<int> visited;
+
+	//Set the begin node as the current Node
+	prioritySet.insert(startNode);
+	weightMap[startNode.position] = 0;	//start node always has weight 0
+
+	while (true) {
+		DjisktraNode curNode = std::move(*prioritySet.begin());	//The front of set is going to be the lowest weight
+		prioritySet.erase(prioritySet.begin());	//Erase the empty spot
+		visited.insert(curNode);
+		tempPath.push(curNode);
+
+		//Push all the adj nodes to currNode into set
+		vector<Node> neighbors = std::move(graph.nodesAdjcTo(curNode));	//Hope this will call the master class version
+
+		for (Node& each : neighbors) {
+			DjisktraNode neoNode(each, false, curNode.position);
+			if (neoNode.position == endNode.position) {	//If end node is one of the neighbors
+				tempPath.push(neoNode);
+				pruneAndReversePath(tempPath);
+				return;		//Once find the endNode, it's finished
+			}
+			if (visited.count(neoNode) == 0) {	//Only add into the adjacent set if the node is NOT VISITED
+												//Push all the adjacent node (with prevPos) into the set. Only unvisited Node tho
+				//Use new Map to fix the problem. FIXME: The map needs to be a pair<position, previous path> as key and weight as value if wants to follow EXACTLY like the model
+				if (curNode != each) {
+					weightMap[each.position] = weightMap[curNode.position] + 1;	//Distance to each adjacent node is 1 away from the current Node
+				}
+
+				auto duplicatedNode = prioritySet.find(each);
+				if (duplicatedNode != end(prioritySet)) {	//Duplication happen
+					if (weightMap[neoNode.position] < weightMap[duplicatedNode->position]) {	//If the weight is lower than one already exist in set
+						//Then update the node in set to be the new weight and change its' prevNode path
+						prioritySet.erase(duplicatedNode);	//Then delete the old Node
+					}
+				}
+				prioritySet.insert(neoNode);	//First insert the better new node
+			}
+		}
+	}
+}

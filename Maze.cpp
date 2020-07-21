@@ -32,6 +32,7 @@ private:
 
 	//Graph
 	ListGraph graph;
+	//DjikstraPath graph;
 
 	bool adjToEndNode(const Pos& local);
 	bool validPos(const Pos& local);
@@ -50,6 +51,8 @@ public:
 		source = m_maze;
 	}
 
+	std::stack<DjisktraNode> generatedPathWay() const;
+
 	//Error class
 	struct no_sides_avaialbe : public logic_error {
 		no_sides_avaialbe(const char* msg) : logic_error(msg) {};
@@ -57,7 +60,7 @@ public:
 };
 
 int main() {
-	Maze maze(4, 4, Pos(0,0), Pos(3,3));
+	Maze maze(2, 2, Pos(0,0), Pos(1,1));
 	vector<vector<char>> result;
 	maze.getMaze(result);
 
@@ -67,6 +70,7 @@ int main() {
 		}
 		cout << "\n";
 	}
+	maze.generatedPathWay();
 	maze.getMaze(result);	//Maze correctly produces and the graph report accurately. Graph doesn't include the destination nodes but every other nodes is in there
 	cout << "End";
 }
@@ -193,6 +197,8 @@ void Maze::generatingMaze() {
 			Node neoNode(curNode);
 			try {
 				graph.addNode(neoNode);
+				if (neoNode == endNode)	//Reach the end
+					return;
 			}
 			catch (const ListGraph::NodeAlreadyExist& e) {
 				cerr << e.what() << "\n";
@@ -208,7 +214,7 @@ void Maze::generatingMaze() {
 			////////////////////////////////////////////////////////
 
 			//FIXME: There's a possibility of the maze path stuck at the left wall of the box because the first Direction fill in findAdjNodeToUnlock is left first - DONE
-			if (!adjToEndNode(curNode)) {
+			//if (!adjToEndNode(curNode)) {
 				for (int i = 0; i < numUnlock; ++i) {
 					try {
 						Pos adj = findAdjNodeToUnlock(curNode);
@@ -225,8 +231,17 @@ void Maze::generatingMaze() {
 						continue;	//If no locked node is found, then just skip over 1 loop
 					}
 				}
-			}
-			else return;	//Finish creating a path toward the end Nodes
+			//}
+			//else return;	//Finish creating a path toward the end Nodes
 		}
 	}
+}
+
+//Get path from the Dijkstra
+std::stack<DjisktraNode> Maze::generatedPathWay() const {
+	DjisktraNode start(startNode);
+	DjisktraNode end(endNode);
+	DjikstraPath pathWay(graph, start, end);
+
+	return pathWay.getPath();
 }
