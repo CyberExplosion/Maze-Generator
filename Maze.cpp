@@ -239,9 +239,9 @@ void Maze::generatingMaze() {
 
 //Get path from the Dijkstra
 std::stack<DjisktraNode> Maze::generatedPathWay() const {
-	DjisktraNode start(startNode);
-	DjisktraNode end(endNode);
-	DjikstraPath pathWay(graph, start, end);
+	//DjisktraNode start(startNode);
+	//DjisktraNode end(endNode);
+	DjikstraPath pathWay(graph, startNode, endNode);
 
 	return pathWay.getPath();
 }

@@ -125,25 +125,27 @@ struct DjisktraNode : public Node {
 	bool visited;
 	Pos prevPos;
 	DjisktraNode(Pos curPos, int weight, bool visit = false, Pos prev = Pos(0, 0)) : Node(curPos, weight), visited(visit), prevPos(prev) {};
-	DjisktraNode(Node curNode, bool visited = false, Pos prev = Pos(0, 0)) : Node(curNode), visited(visited), prevPos(prev) {};
+	DjisktraNode(Node curNode, Pos prev = Pos(0, 0)) : Node(curNode), prevPos(prev) {};
 	bool operator==(const DjisktraNode& rhs) const noexcept{
 		return (static_cast<Node> (*this) == static_cast<Node>(rhs));	//Use the Node version of equal
 		//return this->position == rhs.position;
 	}
 };
 
+//Node only hash equal the current node location. Since this is what the find() function use to find a duplicated node in the set. This is used to find lesser weight with different previous path
 struct DjikstraSetHash {
 	std::size_t operator()(const DjisktraNode& node) const noexcept {
 		////return ((hash<string>()(k.first) ^ (hash<string>()(k.second) << 1)) >> 1) ^ (hash<int>()(k.third) << 1);
 		////		std::size_t h1 = std::hash<int>{}(host.position.x);
 		std::size_t h1 = std::hash<int>{}(node.position.x);
 		std::size_t h2 = std::hash<int>{}(node.position.y);
-		std::size_t h3 = std::hash<int>{}(node.prevPos.x);
-		std::size_t h4 = std::hash<int>{}(node.prevPos.y);
-		std::size_t h5 = std::hash<bool>{}(node.visited);
-		std::size_t h6 = std::hash<int>{}(node.weightToHere);	//These codes above are utterly stupid
+		//std::size_t h3 = std::hash<int>{}(node.prevPos.x);
+		//std::size_t h4 = std::hash<int>{}(node.prevPos.y);
+		//std::size_t h5 = std::hash<bool>{}(node.visited);
+		//std::size_t h6 = std::hash<int>{}(node.weightToHere);	//These codes above are utterly stupid
 
-		return (((((h1 ^ (h2 << 1) >> 1) ^ (h3 << 1)) >> 1) ^ (h4 << 1) >> 1) ^ (h5 << 1) >> 1 ) ^ (h6 << 1);
+		//return (((((h1 ^ (h2 << 1) >> 1) ^ (h3 << 1)) >> 1) ^ (h4 << 1) >> 1) ^ (h5 << 1) >> 1 ) ^ (h6 << 1);
+		return h1 ^ (h2 << 1);
 
 		//return static_cast<std::size_t>(sizeof(node.position.x) + sizeof(node.position.y) + sizeof(node.prevPos.x) + sizeof(node.prevPos.y) + sizeof(node.visited) + sizeof(node.weightToHere));
 	}
@@ -160,7 +162,7 @@ struct DjikstraMapHash {
 class DjikstraPath {
 private:
 	ListGraph graph;
-	DjisktraNode startNode, endNode;
+	Pos startNode, endNode;
 	std::stack<DjisktraNode> pathWay;
 
 	struct lowerCompSet {
@@ -172,9 +174,10 @@ private:
 	void pruneAndReversePath(std::stack<DjisktraNode>& path) noexcept;
 	void generateWeight(ListGraph& t_graph);
 	void pathFinding();
+
 public:
 	//No output parameters in here
-	DjikstraPath(const ListGraph& t_graph, const Node& beginNode, const Node& finishNode) : graph(t_graph), startNode(beginNode), endNode(finishNode) {
+	DjikstraPath(const ListGraph& t_graph, const Pos& beginNode, const Pos& finishNode) : graph(t_graph), startNode(beginNode), endNode(finishNode) {
 		pathFinding();
 	};
 	std::stack<DjisktraNode> getPath() {

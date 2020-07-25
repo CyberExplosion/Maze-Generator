@@ -291,12 +291,13 @@ void DjikstraPath::pathFinding() {
 	stack<DjisktraNode> tempPath;
 	set<DjisktraNode, lowerCompSet> prioritySet;
 	unordered_set<DjisktraNode, DjikstraSetHash> visited;
-	unordered_map<Pos, int, DjikstraMapHash> weightMap;	//FIXME: Doesn't work like thinking. If stays like the model, the prev Path and the position combine will be the key. THe weight is the value
+	unordered_map<Pos, int, DjikstraMapHash> weightMap;	//FIXME: Doesn't work like thinking. If stays like the model, the prev Path and the position combine will be the key. The weight is the value - DONE: Use a different hash function for Set so that it only looks for the current position of the node and not any other things
 	//unordered_set<int> visited;
 
 	//Set the begin node as the current Node
-	prioritySet.insert(startNode);
-	weightMap[startNode.position] = 0;	//start node always has weight 0
+	DjisktraNode start(startNode);
+	prioritySet.insert(start);
+	weightMap[startNode] = 0;	//start node always has weight 0
 
 	while (true) {
 		DjisktraNode curNode = std::move(*prioritySet.begin());	//The front of set is going to be the lowest weight
@@ -308,8 +309,8 @@ void DjikstraPath::pathFinding() {
 		vector<Node> neighbors = std::move(graph.nodesAdjcTo(curNode));	//Hope this will call the master class version
 
 		for (Node& each : neighbors) {
-			DjisktraNode neoNode(each, false, curNode.position);
-			if (neoNode.position == endNode.position) {	//If end node is one of the neighbors
+			DjisktraNode neoNode(each.position, curNode.position);
+			if (neoNode.position == endNode) {	//If end node is one of the neighbors
 				tempPath.push(neoNode);
 				pruneAndReversePath(tempPath);
 				return;		//Once find the endNode, it's finished
