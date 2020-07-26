@@ -233,6 +233,7 @@ bool ListGraph::isConnected(const Node& firstNode, const Node& secondNode) {
 }
 
 
+
 //function returns a vector of Node that adjacent to the source, could throw if the source does not exist
 std::vector<Node> ListGraph::nodesAdjcTo(const Node& source) {
 	if (graph.count(source) == 0)	//FIXME: doesn't work if other source change the weight of a particular node.
@@ -240,8 +241,14 @@ std::vector<Node> ListGraph::nodesAdjcTo(const Node& source) {
 		throw NodeNotExist("Source node does not exist in graph");
 	vector<Node>temp;
 	list<Node> host = graph[source];
-	for (auto neighbor : host) {
-		temp.push_back(neighbor);
+
+	if (host.size() <= 1)
+		throw OnlyOneNodeExist("Host node doesn't have any neighbor");
+	else {
+		auto beg = ++begin(host);	//The first node in the list is the host itself, therefore let's skip it
+		for (auto neighbor = beg; neighbor != end(host); ++neighbor) {
+			temp.push_back(*neighbor);
+		}
 	}
 	return temp;
 }
@@ -272,6 +279,7 @@ std::vector<Node> ListGraph::nodesAdjcTo(const Node& source) {
 void DjikstraPath::pruneAndReversePath(stack<DjisktraNode>& tempPath) noexcept {
 	DjisktraNode curNode = tempPath.top();	//Get the end Node
 	tempPath.pop();
+	pathWay.push(curNode);
 
 	while (!tempPath.empty()) {
 		if (tempPath.top().position == curNode.prevPos) {	//When the prevPos is found in the tempPath
@@ -282,15 +290,42 @@ void DjikstraPath::pruneAndReversePath(stack<DjisktraNode>& tempPath) noexcept {
 	}
 }
 
-//The weight is updated after graph being created.
-void DjikstraPath::generateWeight(ListGraph& t_graph) {
+//Function returns 1 plus the lowest weight find in the adjacent nodes
+int DjikstraPath::calcWeight(const Pos& posToWeigh, const unordered_map<Pos, int, DjikstraMapHash>& weightMap) {
+	Node weightNode(posToWeigh);
+	auto neighbors = graph.nodesAdjcTo(weightNode);
 
+	if (neighbors.size() > 0) {
+		Pos lowestPos = neighbors.at(0).position;	//First neighbor location
+		int lowestWeight;
+		if (weightMap.count(lowestPos) > 0)
+			lowestWeight = weightMap.at(lowestPos);	//Assume the lowest weight is the first neighbors' weight
+		else
+			lowestWeight = IFN;	//DEFAULT;
+
+		if (neighbors.size() > 1) {
+			auto beg = ++begin(neighbors);
+			for (auto iter = beg; iter != end(neighbors); ++iter) {	//Go through the whole neighbor list to find the lowest weight
+				Pos temp = iter->position;
+				if (weightMap.count(temp) > 0 && weightMap.at(temp) < lowestWeight)
+					lowestWeight = weightMap.at(temp);
+			}
+		}
+		return lowestWeight + 1;	//The weight for the node is going to be one more from the lowest adjacent weight
+	}
+	else throw ListGraph::OnlyOneNodeExist("There's no neighbor nodes for the host\n");
 }
+
 
 void DjikstraPath::pathFinding() {
 	stack<DjisktraNode> tempPath;
-	set<DjisktraNode, lowerCompSet> prioritySet;
-	unordered_set<DjisktraNode, DjikstraSetHash> visited;
+	auto hashPos = [](const DjisktraNode& node) {
+		size_t h1 = std::hash<int>{}(node.position.x);
+		size_t h2 = std::hash<int>{}(node.position.y);
+		return h1 ^ (h2 << 1);
+	};
+    unordered_set<DjisktraNode, decltype(hashPos)> prioritySet;
+	unordered_set<DjisktraNode, decltype(hashPos)> visited;
 	unordered_map<Pos, int, DjikstraMapHash> weightMap;	//FIXME: Doesn't work like thinking. If stays like the model, the prev Path and the position combine will be the key. The weight is the value - DONE: Use a different hash function for Set so that it only looks for the current position of the node and not any other things
 	//unordered_set<int> visited;
 
@@ -300,6 +335,10 @@ void DjikstraPath::pathFinding() {
 	weightMap[startNode] = 0;	//start node always has weight 0
 
 	while (true) {
+		if (prioritySet.empty()) {
+			pruneAndReversePath(tempPath);
+			return;
+		}
 		DjisktraNode curNode = std::move(*prioritySet.begin());	//The front of set is going to be the lowest weight
 		prioritySet.erase(prioritySet.begin());	//Erase the empty spot
 		visited.insert(curNode);
@@ -319,9 +358,11 @@ void DjikstraPath::pathFinding() {
 												//Push all the adjacent node (with prevPos) into the set. Only unvisited Node tho
 				//Use new Map to fix the problem. FIXME: The map needs to be a pair<position, previous path> as key and weight as value if wants to follow EXACTLY like the model
 				if (curNode != each) {
-					weightMap[each.position] = weightMap[curNode.position] + 1;	//Distance to each adjacent node is 1 away from the current Node
+					//weightMap[each.position] = weightMap[curNode.position] + 1;	//Distance to each adjacent node is 1 away from the current Node
+					weightMap[each.position] = calcWeight(each.position, weightMap);
 				}
 
+				//auto duplicatedNode = find_if(begin(prioritySet), end(prioritySet), [&each](auto neighbor) {return each.position == neighbor.position; });
 				auto duplicatedNode = prioritySet.find(each);
 				if (duplicatedNode != end(prioritySet)) {	//Duplication happen
 					if (weightMap[neoNode.position] < weightMap[duplicatedNode->position]) {	//If the weight is lower than one already exist in set

@@ -139,13 +139,13 @@ struct DjikstraSetHash {
 		////		std::size_t h1 = std::hash<int>{}(host.position.x);
 		std::size_t h1 = std::hash<int>{}(node.position.x);
 		std::size_t h2 = std::hash<int>{}(node.position.y);
-		//std::size_t h3 = std::hash<int>{}(node.prevPos.x);
-		//std::size_t h4 = std::hash<int>{}(node.prevPos.y);
-		//std::size_t h5 = std::hash<bool>{}(node.visited);
-		//std::size_t h6 = std::hash<int>{}(node.weightToHere);	//These codes above are utterly stupid
+		std::size_t h3 = std::hash<int>{}(node.prevPos.x);
+		std::size_t h4 = std::hash<int>{}(node.prevPos.y);
+		std::size_t h5 = std::hash<bool>{}(node.visited);
+		std::size_t h6 = std::hash<int>{}(node.weightToHere);	//These codes above are utterly stupid
 
-		//return (((((h1 ^ (h2 << 1) >> 1) ^ (h3 << 1)) >> 1) ^ (h4 << 1) >> 1) ^ (h5 << 1) >> 1 ) ^ (h6 << 1);
-		return h1 ^ (h2 << 1);
+		return (((((h1 ^ (h2 << 1) >> 1) ^ (h3 << 1)) >> 1) ^ (h4 << 1) >> 1) ^ (h5 << 1) >> 1 ) ^ (h6 << 1);
+		//return (h1 ^ (h2 << 1));
 
 		//return static_cast<std::size_t>(sizeof(node.position.x) + sizeof(node.position.y) + sizeof(node.prevPos.x) + sizeof(node.prevPos.y) + sizeof(node.visited) + sizeof(node.weightToHere));
 	}
@@ -167,12 +167,12 @@ private:
 
 	struct lowerCompSet {
 		bool operator()(const DjisktraNode& lhs, const DjisktraNode& rhs) const {
-			return lhs.weightToHere < rhs.weightToHere;
+			return (lhs.position != rhs.position) || (lhs.weightToHere < rhs.weightToHere);
 		}
 	};
 
 	void pruneAndReversePath(std::stack<DjisktraNode>& path) noexcept;
-	void generateWeight(ListGraph& t_graph);
+	int calcWeight(const Pos& nodeToWeigh, const std::unordered_map<Pos, int, DjikstraMapHash>& weightMap);
 	void pathFinding();
 
 public:

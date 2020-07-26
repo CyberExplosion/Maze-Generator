@@ -6,7 +6,7 @@
 #include <stack>
 //#include <array>
 //#include <future>
-
+#include <string>
 #include "DjikstraPath.h"
 using namespace std;
 
@@ -60,7 +60,7 @@ public:
 };
 
 int main() {
-	Maze maze(2, 2, Pos(0,0), Pos(1,1));
+	Maze maze(10, 10, Pos(0,0), Pos(9,9));
 	vector<vector<char>> result;
 	maze.getMaze(result);
 
@@ -70,9 +70,10 @@ int main() {
 		}
 		cout << "\n";
 	}
-	maze.generatedPathWay();
+	auto path = maze.generatedPathWay();
 	maze.getMaze(result);	//Maze correctly produces and the graph report accurately. Graph doesn't include the destination nodes but every other nodes is in there
 	cout << "End";
+	return 0;
 }
 
 bool Maze::adjToEndNode(const Pos& local) {
@@ -160,8 +161,10 @@ Pos Maze::findAdjNodeToUnlock(const Pos& curLocal) {
 			}
 		}
 		else return targetLocal;
+
+		throw no_sides_avaialbe("Reach end of 4 direction without finding any possible Node to unlock");
 	}
-	throw no_sides_avaialbe("Reach end of 4 direction without finding any possible Node to unlock");
+	else throw invalid_argument("Position of node is not valid. x:" + to_string(curLocal.x) + ", y: " + to_string(curLocal.y));
 	//return targetLocal;
 }
 
@@ -174,9 +177,8 @@ void Maze::generatingMaze() {
 	if (validPos(startNode) && validPos(endNode)) {
 		if (adjToEndNode(startNode))
 			return;
-		//Fill the start and end Node with path
+		//Fill the start Node with an opening path
 		m_maze.at(startNode.y).at(startNode.y) = pathChar;
-		m_maze.at(endNode.y).at(endNode.y) = pathChar;
 
 		//Randomly determine how many Path should be created
 		//M + rand() / (RAND_MAX / (N - M + 1) + 1)
@@ -197,8 +199,9 @@ void Maze::generatingMaze() {
 			Node neoNode(curNode);
 			try {
 				graph.addNode(neoNode);
-				if (neoNode == endNode)	//Reach the end
+				if (neoNode == endNode) {	//Reach the end
 					return;
+				}
 			}
 			catch (const ListGraph::NodeAlreadyExist& e) {
 				cerr << e.what() << "\n";
@@ -217,7 +220,7 @@ void Maze::generatingMaze() {
 			//if (!adjToEndNode(curNode)) {
 				for (int i = 0; i < numUnlock; ++i) {
 					try {
-						Pos adj = findAdjNodeToUnlock(curNode);
+						Pos adj = findAdjNodeToUnlock(curNode);	//Could throw right here if there's no side available
 						Nodes.push(adj);
 
 						//Apply the stack tracking method with nodes that still has adjacent sides
