@@ -39,6 +39,7 @@ private:
 	bool unlockNode(const Pos& local);
 	Pos findAdjNodeToUnlock(const Pos& curLocal);
 	void generatingMaze();
+	std::stack<DjisktraNode> generatedPathWay() const;
 public:
 
 	Maze(int width, int length, Pos start, Pos end, char obst = 'X', char path = '.') : obstacleChar(obst), pathChar(path), startNode(start), endNode(end), graph(start) {
@@ -51,8 +52,7 @@ public:
 		source = m_maze;
 	}
 
-	std::stack<DjisktraNode> generatedPathWay() const;
-
+	void mazeWithSolPath(std::vector<std::vector<char>>& mazeWithSol, const char pathChar);
 	//Error class
 	struct no_sides_avaialbe : public logic_error {
 		no_sides_avaialbe(const char* msg) : logic_error(msg) {};
@@ -60,7 +60,7 @@ public:
 };
 
 int main() {
-	Maze maze(10, 10, Pos(0,0), Pos(9,9));
+	Maze maze(10, 10, Pos(0,0), Pos(5,5));
 	vector<vector<char>> result;
 	maze.getMaze(result);
 
@@ -70,9 +70,16 @@ int main() {
 		}
 		cout << "\n";
 	}
-	auto path = maze.generatedPathWay();
+	//auto path = maze.generatedPathWay();
 	maze.getMaze(result);	//Maze correctly produces and the graph report accurately. Graph doesn't include the destination nodes but every other nodes is in there
-	cout << "End";
+	cout << "End\n Result:\n";
+	maze.mazeWithSolPath(result, '0');
+	for (auto row : result) {
+		for (auto col : row) {
+			cout << col << " ";
+		}
+		cout << "\n";
+	}
 	return 0;
 }
 
@@ -247,4 +254,14 @@ std::stack<DjisktraNode> Maze::generatedPathWay() const {
 	DjikstraPath pathWay(graph, startNode, endNode);
 
 	return pathWay.getPath();
+}
+
+//Copy out maze with the pathway using the pathChar
+void Maze::mazeWithSolPath(std::vector<std::vector<char>>& mazeWithSol, const char pathChar) {
+	auto path = generatedPathWay();
+	mazeWithSol = m_maze;
+	while (!path.empty()) {
+		mazeWithSol.at(path.top().position.y).at(path.top().position.x) = pathChar;
+		path.pop();
+	}
 }
